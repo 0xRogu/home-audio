@@ -37,11 +37,11 @@ pub async fn upload_audio(
     while let Some(Ok(mut field)) = payload.next().await {
         let content_type = field.content_type();
         let valid_types = vec![
-            "audio/mpeg".parse::<Mime>().unwrap(),   // MP3
-            "audio/wav".parse::<Mime>().unwrap(),    // WAV
-            "audio/flac".parse::<Mime>().unwrap(),   // FLAC
-            "audio/aac".parse::<Mime>().unwrap(),    // AAC
-            "audio/ogg".parse::<Mime>().unwrap(),    // OGG
+            "audio/mpeg".parse::<Mime>().unwrap(), // MP3
+            "audio/wav".parse::<Mime>().unwrap(),  // WAV
+            "audio/flac".parse::<Mime>().unwrap(), // FLAC
+            "audio/aac".parse::<Mime>().unwrap(),  // AAC
+            "audio/ogg".parse::<Mime>().unwrap(),  // OGG
         ];
 
         let mime_type =
@@ -128,7 +128,10 @@ pub async fn stream_audio(
         }
 
         let filepath = format!("{}/{}_{}", audio.user_folder, audio.id, audio.filename);
-        let mime_type = audio.mime_type.parse::<Mime>().unwrap_or("audio/mpeg".parse::<Mime>().unwrap());
+        let mime_type = audio
+            .mime_type
+            .parse::<Mime>()
+            .unwrap_or("audio/mpeg".parse::<Mime>().unwrap());
         let file = NamedFile::open(filepath)?.set_content_type(mime_type);
         Ok(file)
     } else {

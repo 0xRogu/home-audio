@@ -33,7 +33,7 @@ pub async fn login(
 
     if let Some(user) = user {
         let claims = Claims {
-            sub: user.id,
+            sub: user.id.expect("User ID should not be null"),
             exp: (Utc::now() + chrono::Duration::days(1)).timestamp() as usize,
         };
 

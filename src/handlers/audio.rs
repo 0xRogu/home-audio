@@ -4,7 +4,6 @@ use actix_web::{web, Error, HttpRequest, HttpResponse};
 use chrono::Utc;
 use futures::StreamExt;
 use mime::Mime;
-use sqlx::Row;
 use std::fs;
 use std::io::Write;
 use uuid::Uuid;
@@ -34,8 +33,12 @@ pub async fn upload_audio(
     let user_folder = format!("./uploads/{}", user_id);
     fs::create_dir_all(&user_folder)?;
 
-    while let Some(Ok(mut field)) = payload.next().await {
-        let content_type = field.content_type();
+    // Process the first field that contains an audio file
+    if let Some(Ok(mut field)) = payload.next().await {
+        // Get content type and validate it first
+        let mime_type = field.content_type()
+            .ok_or_else(|| AppError("No content type specified".to_string()))?;
+            
         let valid_types = vec![
             "audio/mpeg".parse::<Mime>().unwrap(), // MP3
             "audio/wav".parse::<Mime>().unwrap(),  // WAV
@@ -44,20 +47,21 @@ pub async fn upload_audio(
             "audio/ogg".parse::<Mime>().unwrap(),  // OGG
         ];
 
-        let mime_type =
-            content_type.ok_or_else(|| AppError("No content type specified".to_string()))?;
-
-        if !valid_types.contains(&mime_type) {
+        if !valid_types.contains(mime_type) {
             return Err(
                 AppError("Invalid audio format (only MP3/WAV/FLAC/AAC/OGG)".to_string()).into(),
             );
         }
+        
+        // Store the mime type as string before processing the field
+        let mime_type_str = mime_type.to_string();
 
         let filename = field
             .content_disposition()
+            .expect("Content disposition missing")
             .get_filename()
-            .unwrap_or("audio")
-            .to_string();
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| format!("unknown_{}.mp3", Uuid::new_v4()));
         let audio_id = Uuid::new_v4().to_string();
         let filepath = format!("{}/{}_{}", user_folder, audio_id, filename);
 
@@ -72,7 +76,7 @@ pub async fn upload_audio(
             filename,
             user_id: user_id.clone(),
             created_at: Utc::now(),
-            mime_type: mime_type.to_string(),
+            mime_type: mime_type_str,
             user_folder,
         };
 
@@ -82,7 +86,7 @@ pub async fn upload_audio(
         .bind(&audio_file.id)
         .bind(&audio_file.filename)
         .bind(&audio_file.user_id)
-        .bind(&audio_file.created_at)
+        .bind(audio_file.created_at)
         .bind(&audio_file.mime_type)
         .bind(&audio_file.user_folder)
         .execute(&state.db_pool)

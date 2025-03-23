@@ -1,10 +1,9 @@
-use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::env;
 use std::fs;
-use std::time::Duration;
+use actix_web::web::ServiceConfig;
 
 mod auth;
 mod config;
@@ -13,7 +12,7 @@ mod handlers;
 mod models;
 
 use crate::auth::login;
-use crate::config::{ensure_ssl_cert_exists, init_db, load_rustls_config, AppState};
+use crate::config::{ensure_ssl_cert_exists, init_db, AppState};
 use crate::handlers::*;
 
 #[actix_web::main]
@@ -42,25 +41,15 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to initialize database");
 
-    // Set up rate limiter
-    let store = MemoryStore::new();
-
     // Create the app state
     let app_state = web::Data::new(AppState {
         db_pool,
         secret_key,
     });
 
-    // Start HTTP server
-    HttpServer::new(move || {
-        App::new()
-            .wrap(middleware::Logger::default())
-            .wrap(
-                RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
-                    .with_interval(Duration::from_secs(60))
-                    .with_max_requests(100),
-            )
-            .app_data(app_state.clone())
+    // Configure routes
+    let app_config = move |cfg: &mut ServiceConfig| {
+        cfg.app_data(app_state.clone())
             .route("/login", web::post().to(login))
             .route("/audio", web::post().to(upload_audio))
             .route("/audio/{id}", web::get().to(stream_audio))
@@ -77,9 +66,16 @@ async fn main() -> std::io::Result<()> {
             )
             .route("/users", web::post().to(create_user))
             .route("/users", web::get().to(list_users))
-            .route("/users/{id}", web::delete().to(delete_user))
+            .route("/users/{id}", web::delete().to(delete_user));
+    };
+
+    // Start HTTP server
+    HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Logger::default())
+            .configure(app_config.clone())
     })
-    .bind_rustls("127.0.0.1:8443", load_rustls_config())?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }

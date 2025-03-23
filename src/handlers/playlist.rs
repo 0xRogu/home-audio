@@ -135,9 +135,9 @@ pub async fn get_playlist(
         let playlist_items: Vec<PlaylistAudioItem> = items
             .into_iter()
             .map(|item| PlaylistAudioItem {
-                id: item.id,
+                id: item.id.expect("Item ID should not be null"),
                 audio_id: item.audio_id,
-                position: item.position,
+                position: item.position as i32,
                 filename: item.filename,
                 mime_type: item.mime_type,
             })
@@ -266,8 +266,8 @@ pub async fn add_to_playlist(
             .map_err(|e| AppError(e.to_string()))?
             .max_pos
             .unwrap_or(0);
-
-            max_position + 1
+            
+            (max_position + 1) as i32
         };
 
         let item_id = Uuid::new_v4().to_string();

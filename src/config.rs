@@ -1,5 +1,5 @@
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use rustls::ServerConfig;
+use rustls::pki_types::PrivateKeyDer;
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use sqlx::SqlitePool;
 use std::fs;
@@ -47,6 +47,9 @@ pub async fn init_db(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+// Commented out as it's not currently used, but may be needed in the future
+// for TLS support
+#[allow(dead_code)]
 pub fn load_rustls_config() -> ServerConfig {
     let cert_file =
         &mut BufReader::new(fs::File::open("cert.pem").expect("Cannot open certificate file"));
@@ -54,24 +57,16 @@ pub fn load_rustls_config() -> ServerConfig {
 
     let cert_chain = certs(cert_file)
         .collect::<Result<Vec<_>, _>>()
-        .unwrap()
-        .into_iter()
-        .map(CertificateDer::from)
-        .collect::<Vec<_>>();
+        .unwrap();
 
     let mut keys = pkcs8_private_keys(key_file)
         .collect::<Result<Vec<_>, _>>()
-        .unwrap()
-        .into_iter()
-        .map(PrivateKeyDer::from)
-        .collect::<Vec<_>>();
+        .unwrap();
 
-    let config = ServerConfig::builder()
+    ServerConfig::builder()
         .with_no_client_auth()
-        .with_single_cert(cert_chain, keys.remove(0))
-        .expect("Failed to set up TLS config");
-
-    config
+        .with_single_cert(cert_chain, PrivateKeyDer::Pkcs8(keys.remove(0)))
+        .expect("Failed to set up TLS config")
 }
 
 pub fn ensure_ssl_cert_exists() -> std::io::Result<()> {

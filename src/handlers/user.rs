@@ -48,11 +48,12 @@ pub async fn create_user(
     fs::create_dir_all(&user_folder)?;
 
     // Create user in database
-    sqlx::query("INSERT INTO users (id, username, password, is_admin) VALUES (?, ?, ?, ?)")
+    sqlx::query("INSERT INTO users (id, username, password, is_admin, created_at) VALUES (?, ?, ?, ?, ?)")
         .bind(&new_user_id)
         .bind(&req.username)
         .bind(&req.password)
-        .bind(&req.is_admin)
+        .bind(req.is_admin)
+        .bind(chrono::Utc::now())
         .execute(&state.db_pool)
         .await
         .map_err(|e| AppError(e.to_string()))?;
@@ -124,7 +125,7 @@ pub async fn delete_user(
     // Delete playlist items that reference this user's audio files
     for audio in &audio_files {
         sqlx::query("DELETE FROM playlist_items WHERE audio_id = ?")
-            .bind(&audio.id)
+            .bind(audio.get::<String, _>("id"))
             .execute(&mut *tx)
             .await
             .map_err(|e| AppError(e.to_string()))?;
@@ -146,7 +147,7 @@ pub async fn delete_user(
 
     for playlist in &playlists {
         sqlx::query("DELETE FROM playlist_items WHERE playlist_id = ?")
-            .bind(&playlist.id)
+            .bind(playlist.get::<String, _>("id"))
             .execute(&mut *tx)
             .await
             .map_err(|e| AppError(e.to_string()))?;
@@ -171,7 +172,11 @@ pub async fn delete_user(
 
     // Delete audio files from filesystem
     for audio in audio_files {
-        let filepath = format!("{}/{}_{}", audio.user_folder, audio.id, audio.filename);
+        let filepath = format!("{}/{}_{}", 
+            audio.get::<String, _>("user_folder"), 
+            audio.get::<String, _>("id"), 
+            audio.get::<String, _>("filename")
+        );
         let _ = fs::remove_file(filepath); // Ignore errors if file doesn't exist
     }
 

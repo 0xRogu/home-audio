@@ -36,9 +36,10 @@ pub async fn upload_audio(
     // Process the first field that contains an audio file
     if let Some(Ok(mut field)) = payload.next().await {
         // Get content type and validate it first
-        let mime_type = field.content_type()
+        let mime_type = field
+            .content_type()
             .ok_or_else(|| AppError("No content type specified".to_string()))?;
-            
+
         let valid_types = vec![
             "audio/mpeg".parse::<Mime>().unwrap(), // MP3
             "audio/wav".parse::<Mime>().unwrap(),  // WAV
@@ -52,7 +53,7 @@ pub async fn upload_audio(
                 AppError("Invalid audio format (only MP3/WAV/FLAC/AAC/OGG)".to_string()).into(),
             );
         }
-        
+
         // Store the mime type as string before processing the field
         let mime_type_str = mime_type.to_string();
 

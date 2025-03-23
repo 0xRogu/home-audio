@@ -266,7 +266,7 @@ pub async fn add_to_playlist(
             .map_err(|e| AppError(e.to_string()))?
             .max_pos
             .unwrap_or(0);
-            
+
             (max_position + 1) as i32
         };
 

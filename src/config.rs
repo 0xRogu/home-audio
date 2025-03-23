@@ -1,5 +1,5 @@
-use rustls::ServerConfig;
 use rustls::pki_types::PrivateKeyDer;
+use rustls::ServerConfig;
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use sqlx::SqlitePool;
 use std::fs;
@@ -55,9 +55,7 @@ pub fn load_rustls_config() -> ServerConfig {
         &mut BufReader::new(fs::File::open("cert.pem").expect("Cannot open certificate file"));
     let key_file = &mut BufReader::new(fs::File::open("key.pem").expect("Cannot open key file"));
 
-    let cert_chain = certs(cert_file)
-        .collect::<Result<Vec<_>, _>>()
-        .unwrap();
+    let cert_chain = certs(cert_file).collect::<Result<Vec<_>, _>>().unwrap();
 
     let mut keys = pkcs8_private_keys(key_file)
         .collect::<Result<Vec<_>, _>>()

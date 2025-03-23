@@ -48,15 +48,17 @@ pub async fn create_user(
     fs::create_dir_all(&user_folder)?;
 
     // Create user in database
-    sqlx::query("INSERT INTO users (id, username, password, is_admin, created_at) VALUES (?, ?, ?, ?, ?)")
-        .bind(&new_user_id)
-        .bind(&req.username)
-        .bind(&req.password)
-        .bind(req.is_admin)
-        .bind(chrono::Utc::now())
-        .execute(&state.db_pool)
-        .await
-        .map_err(|e| AppError(e.to_string()))?;
+    sqlx::query(
+        "INSERT INTO users (id, username, password, is_admin, created_at) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(&new_user_id)
+    .bind(&req.username)
+    .bind(&req.password)
+    .bind(req.is_admin)
+    .bind(chrono::Utc::now())
+    .execute(&state.db_pool)
+    .await
+    .map_err(|e| AppError(e.to_string()))?;
 
     let user_response = UserResponse {
         id: new_user_id,
@@ -172,9 +174,10 @@ pub async fn delete_user(
 
     // Delete audio files from filesystem
     for audio in audio_files {
-        let filepath = format!("{}/{}_{}", 
-            audio.get::<String, _>("user_folder"), 
-            audio.get::<String, _>("id"), 
+        let filepath = format!(
+            "{}/{}_{}",
+            audio.get::<String, _>("user_folder"),
+            audio.get::<String, _>("id"),
             audio.get::<String, _>("filename")
         );
         let _ = fs::remove_file(filepath); // Ignore errors if file doesn't exist

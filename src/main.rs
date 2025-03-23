@@ -1,9 +1,9 @@
+use actix_web::web::ServiceConfig;
 use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::env;
 use std::fs;
-use actix_web::web::ServiceConfig;
 
 mod auth;
 mod config;

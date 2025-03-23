@@ -1,12 +1,12 @@
-pub mod models;
-pub mod error;
-pub mod config;
 pub mod auth;
+pub mod config;
+pub mod error;
 pub mod handlers;
+pub mod models;
 pub mod utils;
 
 // Re-export commonly used items
-pub use models::*;
-pub use handlers::*;
-pub use config::*;
 pub use auth::*;
+pub use config::*;
+pub use handlers::*;
+pub use models::*;

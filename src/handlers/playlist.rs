@@ -1,19 +1,23 @@
-use actix_web::{web, HttpResponse, Error, HttpRequest};
-use uuid::Uuid;
+use actix_web::{web, Error, HttpRequest, HttpResponse};
 use chrono::Utc;
+use uuid::Uuid;
 
-use crate::models::{Playlist, PlaylistItem, CreatePlaylistRequest, PlaylistWithItems, 
-                   PlaylistAudioItem, AddToPlaylistRequest};
-use crate::error::AppError;
+use crate::auth::{check_admin, validate_token};
 use crate::config::AppState;
-use crate::auth::{validate_token, check_admin};
+use crate::error::AppError;
+use crate::models::{
+    AddToPlaylistRequest, CreatePlaylistRequest, Playlist, PlaylistAudioItem, PlaylistItem,
+    PlaylistWithItems,
+};
 
 pub async fn create_playlist(
     req: web::Json<CreatePlaylistRequest>,
     state: web::Data<AppState>,
     http_req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = http_req.headers().get("Authorization")
+    let token = http_req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -27,7 +31,10 @@ pub async fn create_playlist(
 
     sqlx::query!(
         "INSERT INTO playlists (id, name, user_id, created_at) VALUES (?, ?, ?, ?)",
-        playlist_id, req.name, user_id, created_at
+        playlist_id,
+        req.name,
+        user_id,
+        created_at
     )
     .execute(&state.db_pool)
     .await
@@ -47,7 +54,9 @@ pub async fn get_playlists(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -66,10 +75,12 @@ pub async fn get_playlists(
             .await
     } else {
         // Regular users can only see their own playlists
-        sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE user_id = ? ORDER BY created_at DESC")
-            .bind(user_id)
-            .fetch_all(&state.db_pool)
-            .await
+        sqlx::query_as::<_, Playlist>(
+            "SELECT * FROM playlists WHERE user_id = ? ORDER BY created_at DESC",
+        )
+        .bind(user_id)
+        .fetch_all(&state.db_pool)
+        .await
     }
     .map_err(|e| AppError(e.to_string()))?;
 
@@ -81,7 +92,9 @@ pub async fn get_playlist(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -94,13 +107,11 @@ pub async fn get_playlist(
     let is_admin = check_admin(&user_id, &state.db_pool).await?;
 
     let playlist_id = path.into_inner();
-    let playlist = sqlx::query_as::<_, Playlist>(
-        "SELECT * FROM playlists WHERE id = ?"
-    )
-    .bind(&playlist_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let playlist = sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE id = ?")
+        .bind(&playlist_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(playlist) = playlist {
         // Check if user has access to this playlist
@@ -151,7 +162,9 @@ pub async fn delete_playlist(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -164,13 +177,11 @@ pub async fn delete_playlist(
     let is_admin = check_admin(&user_id, &state.db_pool).await?;
 
     let playlist_id = path.into_inner();
-    let playlist = sqlx::query_as::<_, Playlist>(
-        "SELECT * FROM playlists WHERE id = ?"
-    )
-    .bind(&playlist_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let playlist = sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE id = ?")
+        .bind(&playlist_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(playlist) = playlist {
         // Check if user has access to delete this playlist
@@ -179,10 +190,13 @@ pub async fn delete_playlist(
         }
 
         // First delete all playlist items
-        sqlx::query!("DELETE FROM playlist_items WHERE playlist_id = ?", playlist_id)
-            .execute(&state.db_pool)
-            .await
-            .map_err(|e| AppError(e.to_string()))?;
+        sqlx::query!(
+            "DELETE FROM playlist_items WHERE playlist_id = ?",
+            playlist_id
+        )
+        .execute(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
         // Then delete the playlist
         sqlx::query!("DELETE FROM playlists WHERE id = ?", playlist_id)
@@ -202,7 +216,9 @@ pub async fn add_to_playlist(
     state: web::Data<AppState>,
     http_req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = http_req.headers().get("Authorization")
+    let token = http_req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -212,15 +228,13 @@ pub async fn add_to_playlist(
         .ok_or_else(|| AppError("Invalid token".to_string()))?;
 
     let playlist_id = path.into_inner();
-    
+
     // Check if playlist exists and user has access
-    let playlist = sqlx::query_as::<_, Playlist>(
-        "SELECT * FROM playlists WHERE id = ?"
-    )
-    .bind(&playlist_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let playlist = sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE id = ?")
+        .bind(&playlist_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(playlist) = playlist {
         // Check if user owns this playlist
@@ -229,13 +243,10 @@ pub async fn add_to_playlist(
         }
 
         // Check if audio file exists
-        let audio = sqlx::query!(
-            "SELECT id FROM audio_files WHERE id = ?",
-            req.audio_id
-        )
-        .fetch_optional(&state.db_pool)
-        .await
-        .map_err(|e| AppError(e.to_string()))?;
+        let audio = sqlx::query!("SELECT id FROM audio_files WHERE id = ?", req.audio_id)
+            .fetch_optional(&state.db_pool)
+            .await
+            .map_err(|e| AppError(e.to_string()))?;
 
         if audio.is_none() {
             return Err(AppError("Audio file not found".to_string()).into());
@@ -255,15 +266,18 @@ pub async fn add_to_playlist(
             .map_err(|e| AppError(e.to_string()))?
             .max_pos
             .unwrap_or(0);
-            
+
             max_position + 1
         };
 
         let item_id = Uuid::new_v4().to_string();
-        
+
         sqlx::query!(
             "INSERT INTO playlist_items (id, playlist_id, audio_id, position) VALUES (?, ?, ?, ?)",
-            item_id, playlist_id, req.audio_id, position
+            item_id,
+            playlist_id,
+            req.audio_id,
+            position
         )
         .execute(&state.db_pool)
         .await
@@ -287,7 +301,9 @@ pub async fn remove_from_playlist(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -297,15 +313,13 @@ pub async fn remove_from_playlist(
         .ok_or_else(|| AppError("Invalid token".to_string()))?;
 
     let (playlist_id, item_id) = path.into_inner();
-    
+
     // Check if playlist exists and user has access
-    let playlist = sqlx::query_as::<_, Playlist>(
-        "SELECT * FROM playlists WHERE id = ?"
-    )
-    .bind(&playlist_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let playlist = sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE id = ?")
+        .bind(&playlist_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(playlist) = playlist {
         // Check if user owns this playlist
@@ -316,7 +330,8 @@ pub async fn remove_from_playlist(
         // Check if item exists in the playlist
         let item = sqlx::query!(
             "SELECT id FROM playlist_items WHERE id = ? AND playlist_id = ?",
-            item_id, playlist_id
+            item_id,
+            playlist_id
         )
         .fetch_optional(&state.db_pool)
         .await
@@ -327,13 +342,10 @@ pub async fn remove_from_playlist(
         }
 
         // Delete the item
-        sqlx::query!(
-            "DELETE FROM playlist_items WHERE id = ?",
-            item_id
-        )
-        .execute(&state.db_pool)
-        .await
-        .map_err(|e| AppError(e.to_string()))?;
+        sqlx::query!("DELETE FROM playlist_items WHERE id = ?", item_id)
+            .execute(&state.db_pool)
+            .await
+            .map_err(|e| AppError(e.to_string()))?;
 
         Ok(HttpResponse::Ok().body("Item removed from playlist"))
     } else {

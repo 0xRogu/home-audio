@@ -1,19 +1,19 @@
-use actix_web::{web, App, HttpServer, middleware};
-use actix_ratelimit::{RateLimiter, MemoryStore, MemoryStoreActor};
-use std::time::Duration;
-use std::env;
-use sqlx::sqlite::SqlitePoolOptions;
-use std::fs;
+use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
+use actix_web::{middleware, web, App, HttpServer};
 use dotenv::dotenv;
+use sqlx::sqlite::SqlitePoolOptions;
+use std::env;
+use std::fs;
+use std::time::Duration;
 
-mod models;
-mod error;
-mod config;
 mod auth;
+mod config;
+mod error;
 mod handlers;
+mod models;
 
-use crate::config::{AppState, init_db, load_rustls_config, ensure_ssl_cert_exists};
 use crate::auth::login;
+use crate::config::{ensure_ssl_cert_exists, init_db, load_rustls_config, AppState};
 use crate::handlers::*;
 
 #[actix_web::main]
@@ -38,7 +38,9 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool");
 
     // Initialize database tables
-    init_db(&db_pool).await.expect("Failed to initialize database");
+    init_db(&db_pool)
+        .await
+        .expect("Failed to initialize database");
 
     // Set up rate limiter
     let store = MemoryStore::new();
@@ -54,10 +56,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(
-                RateLimiter::new(
-                    MemoryStoreActor::from(store.clone()).start())
+                RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
                     .with_interval(Duration::from_secs(60))
-                    .with_max_requests(100)
+                    .with_max_requests(100),
             )
             .app_data(app_state.clone())
             .route("/login", web::post().to(login))
@@ -70,7 +71,10 @@ async fn main() -> std::io::Result<()> {
             .route("/playlists/{id}", web::get().to(get_playlist))
             .route("/playlists/{id}", web::delete().to(delete_playlist))
             .route("/playlists/{id}/items", web::post().to(add_to_playlist))
-            .route("/playlists/{id}/items/{item_id}", web::delete().to(remove_from_playlist))
+            .route(
+                "/playlists/{id}/items/{item_id}",
+                web::delete().to(remove_from_playlist),
+            )
             .route("/users", web::post().to(create_user))
             .route("/users", web::get().to(list_users))
             .route("/users/{id}", web::delete().to(delete_user))

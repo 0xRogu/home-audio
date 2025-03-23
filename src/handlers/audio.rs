@@ -1,24 +1,27 @@
-use actix_web::{web, HttpResponse, Error, HttpRequest};
-use actix_multipart::Multipart;
 use actix_files::NamedFile;
+use actix_multipart::Multipart;
+use actix_web::{web, Error, HttpRequest, HttpResponse};
+use chrono::Utc;
 use futures::StreamExt;
 use mime::Mime;
-use uuid::Uuid;
-use chrono::Utc;
+use sqlx::Row;
 use std::fs;
 use std::io::Write;
+use uuid::Uuid;
 
-use crate::models::AudioFile;
-use crate::error::AppError;
+use crate::auth::{check_admin, validate_token};
 use crate::config::AppState;
-use crate::auth::{validate_token, check_admin};
+use crate::error::AppError;
+use crate::models::AudioFile;
 
 pub async fn upload_audio(
     mut payload: Multipart,
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -34,22 +37,24 @@ pub async fn upload_audio(
     while let Some(Ok(mut field)) = payload.next().await {
         let content_type = field.content_type();
         let valid_types = vec![
-            mime::AUDIO_MPEG,    // MP3
-            mime::AUDIO_WAV,     // WAV
-            mime::AUDIO_FLAC,    // FLAC
-            mime::AUDIO_AAC,     // AAC
-            "audio/ogg".parse::<Mime>().unwrap(), // OGG
+            "audio/mpeg".parse::<Mime>().unwrap(),   // MP3
+            "audio/wav".parse::<Mime>().unwrap(),    // WAV
+            "audio/flac".parse::<Mime>().unwrap(),   // FLAC
+            "audio/aac".parse::<Mime>().unwrap(),    // AAC
+            "audio/ogg".parse::<Mime>().unwrap(),    // OGG
         ];
 
-        let mime_type = content_type.ok_or_else(||
-            AppError("No content type specified".to_string())
-        )?;
+        let mime_type =
+            content_type.ok_or_else(|| AppError("No content type specified".to_string()))?;
 
         if !valid_types.contains(&mime_type) {
-            return Err(AppError("Invalid audio format (only MP3/WAV/FLAC/AAC/OGG)".to_string()).into());
+            return Err(
+                AppError("Invalid audio format (only MP3/WAV/FLAC/AAC/OGG)".to_string()).into(),
+            );
         }
 
-        let filename = field.content_disposition()
+        let filename = field
+            .content_disposition()
             .get_filename()
             .unwrap_or("audio")
             .to_string();
@@ -95,7 +100,9 @@ pub async fn stream_audio(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<NamedFile, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -108,13 +115,11 @@ pub async fn stream_audio(
     let is_admin = check_admin(&user_id, &state.db_pool).await?;
 
     let audio_id = path.into_inner();
-    let audio = sqlx::query_as::<_, AudioFile>(
-        "SELECT * FROM audio_files WHERE id = ?"
-    )
-    .bind(&audio_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let audio = sqlx::query_as::<_, AudioFile>("SELECT * FROM audio_files WHERE id = ?")
+        .bind(&audio_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(audio) = audio {
         // Check if user has access to this audio file
@@ -123,10 +128,8 @@ pub async fn stream_audio(
         }
 
         let filepath = format!("{}/{}_{}", audio.user_folder, audio.id, audio.filename);
-        let mime_type = audio.mime_type.parse::<Mime>()
-            .unwrap_or(mime::AUDIO_MPEG);
-        let file = NamedFile::open(filepath)?
-            .set_content_type(mime_type);
+        let mime_type = audio.mime_type.parse::<Mime>().unwrap_or("audio/mpeg".parse::<Mime>().unwrap());
+        let file = NamedFile::open(filepath)?.set_content_type(mime_type);
         Ok(file)
     } else {
         Err(AppError("Audio not found".to_string()).into())
@@ -138,7 +141,9 @@ pub async fn delete_audio(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -151,13 +156,11 @@ pub async fn delete_audio(
     let is_admin = check_admin(&user_id, &state.db_pool).await?;
 
     let audio_id = path.into_inner();
-    let audio = sqlx::query_as::<_, AudioFile>(
-        "SELECT * FROM audio_files WHERE id = ?"
-    )
-    .bind(&audio_id)
-    .fetch_optional(&state.db_pool)
-    .await
-    .map_err(|e| AppError(e.to_string()))?;
+    let audio = sqlx::query_as::<_, AudioFile>("SELECT * FROM audio_files WHERE id = ?")
+        .bind(&audio_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
 
     if let Some(audio) = audio {
         // Check if user has access to delete this audio file
@@ -185,7 +188,9 @@ pub async fn get_user_audio(
     state: web::Data<AppState>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("Authorization")
+    let token = req
+        .headers()
+        .get("Authorization")
         .and_then(|h| h.to_str().ok())
         .and_then(|s| s.strip_prefix("Bearer "))
         .ok_or_else(|| AppError("Authentication required".to_string()))?;
@@ -195,24 +200,24 @@ pub async fn get_user_audio(
         .ok_or_else(|| AppError("Invalid token".to_string()))?;
 
     let target_user_id = path.into_inner();
-    
+
     // Check if current user is admin or is accessing their own files
     if current_user_id != target_user_id {
         let is_admin = check_admin(&current_user_id, &state.db_pool).await?;
-        
+
         if !is_admin {
             return Err(AppError("Not authorized to access this user's files".to_string()).into());
         }
     }
-    
+
     // Get user's audio files
     let audio_files = sqlx::query_as::<_, AudioFile>(
-        "SELECT * FROM audio_files WHERE user_id = ? ORDER BY created_at DESC"
+        "SELECT * FROM audio_files WHERE user_id = ? ORDER BY created_at DESC",
     )
     .bind(target_user_id)
     .fetch_all(&state.db_pool)
     .await
     .map_err(|e| AppError(e.to_string()))?;
-    
+
     Ok(HttpResponse::Ok().json(audio_files))
 }

@@ -1,0 +1,105 @@
+name: Rust Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  SECRET_KEY: github_actions_test_key
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install OpenSSL
+        run: sudo apt-get update && sudo apt-get install -y openssl
+      
+      - name: Setup SQLite
+        run: sudo apt-get install -y sqlite3
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      
+      - name: Create uploads directory
+        run: mkdir -p uploads
+      
+      - name: Generate SSL certificates
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+      
+      - name: Check code formatting
+        run: cargo fmt --all -- --check
+      
+      - name: Lint with clippy
+        run: cargo clippy -- -D warnings
+      
+      - name: Build
+        run: cargo build --verbose
+      
+      - name: Run tests
+        run: cargo test --verbose
+      
+      - name: Check for security vulnerabilities
+        run: |
+          cargo install cargo-audit || true
+          cargo audit
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install OpenSSL
+        run: sudo apt-get update && sudo apt-get install -y openssl
+      
+      - name: Setup SQLite
+        run: sudo apt-get install -y sqlite3
+      
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+      
+      - name: Create uploads directory
+        run: mkdir -p uploads
+      
+      - name: Generate SSL certificates
+        run: |
+          openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+      
+      - name: Create test database
+        run: |
+          touch test_audio.db
+          echo "DATABASE_URL=sqlite:test_audio.db" >> .env
+          echo "SECRET_KEY=github_actions_test_key" >> .env
+      
+      - name: Run integration tests
+        run: |
+          # Start server in background for integration tests
+          cargo run &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 5
+          
+          # Run integration tests (if they exist)
+          if [ -d "tests" ]; then
+            cargo test --test '*' -- --ignored
+          fi
+          
+          # Kill server
+          kill $SERVER_PID

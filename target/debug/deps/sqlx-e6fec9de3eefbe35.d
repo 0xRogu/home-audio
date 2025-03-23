@@ -1,0 +1,12 @@
+/Users/brandon/Desktop/home-audio/target/debug/deps/libsqlx-e6fec9de3eefbe35.rmeta: /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/mod.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/mod.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/ty_match.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/spec_error.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.md /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/test.md /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/install_drivers_note.md
+
+/Users/brandon/Desktop/home-audio/target/debug/deps/sqlx-e6fec9de3eefbe35.d: /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/mod.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/mod.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/ty_match.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/spec_error.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.md /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/test.md /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/install_drivers_note.md
+
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/mod.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/mod.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/ty_match.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/spec_error.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/lib.md:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/macros/test.md:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sqlx-0.8.3/src/any/install_drivers_note.md:

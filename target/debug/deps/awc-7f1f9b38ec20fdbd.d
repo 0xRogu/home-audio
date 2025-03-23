@@ -1,0 +1,14 @@
+/Users/brandon/Desktop/home-audio/target/debug/deps/libawc-7f1f9b38ec20fdbd.rmeta: /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/lib.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/builder.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/connect.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/error.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/frozen.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/request.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/response.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/sender.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/test.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/ws.rs
+
+/Users/brandon/Desktop/home-audio/target/debug/deps/awc-7f1f9b38ec20fdbd.d: /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/lib.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/builder.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/connect.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/error.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/frozen.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/request.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/response.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/sender.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/test.rs /Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/ws.rs
+
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/lib.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/builder.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/connect.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/error.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/frozen.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/request.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/response.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/sender.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/test.rs:
+/Users/brandon/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/awc-2.0.3/src/ws.rs:

@@ -1746,10 +1746,12 @@ dependencies = [
  "futures",
  "jsonwebtoken",
  "mime",
+ "rand 0.8.5",
  "rustls",
  "rustls-pemfile",
  "serde",
  "sqlx",
+ "tempfile",
  "tokio 1.44.1",
  "uuid",
 ]

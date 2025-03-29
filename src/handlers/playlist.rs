@@ -7,7 +7,7 @@ use crate::config::AppState;
 use crate::error::AppError;
 use crate::models::{
     AddToPlaylistRequest, CreatePlaylistRequest, Playlist, PlaylistAudioItem, PlaylistItem,
-    PlaylistWithItems,
+    PlaylistWithItems, StreamPlaylistOptions,
 };
 
 pub async fn create_playlist(
@@ -348,6 +348,100 @@ pub async fn remove_from_playlist(
             .map_err(|e| AppError(e.to_string()))?;
 
         Ok(HttpResponse::Ok().body("Item removed from playlist"))
+    } else {
+        Err(AppError("Playlist not found".to_string()).into())
+    }
+}
+
+use actix_web::http::header;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+use std::io::Write;
+use tempfile::NamedTempFile;
+
+pub async fn stream_playlist(
+    path: web::Path<String>,
+    options: web::Query<StreamPlaylistOptions>,
+    state: web::Data<AppState>,
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let token = req
+        .headers()
+        .get("Authorization")
+        .and_then(|h| h.to_str().ok())
+        .and_then(|s| s.strip_prefix("Bearer "))
+        .ok_or_else(|| AppError("Authentication required".to_string()))?;
+
+    let user_id = validate_token(token, &state.secret_key)
+        .await
+        .ok_or_else(|| AppError("Invalid token".to_string()))?;
+
+    // Check if user is admin
+    let is_admin = check_admin(&user_id, &state.db_pool).await?;
+
+    let playlist_id = path.into_inner();
+    let playlist = sqlx::query_as::<_, Playlist>("SELECT * FROM playlists WHERE id = ?")
+        .bind(&playlist_id)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
+
+    if let Some(playlist) = playlist {
+        // Check if user has access to this playlist
+        if playlist.user_id != user_id && !is_admin {
+            return Err(AppError("Not authorized to access this playlist".to_string()).into());
+        }
+
+        // Get playlist items with audio details
+        let items = sqlx::query!(
+            "SELECT pi.id, pi.audio_id, pi.position, af.filename, af.mime_type, af.user_folder 
+             FROM playlist_items pi
+             JOIN audio_files af ON pi.audio_id = af.id
+             WHERE pi.playlist_id = ?
+             ORDER BY pi.position",
+            playlist_id
+        )
+        .fetch_all(&state.db_pool)
+        .await
+        .map_err(|e| AppError(e.to_string()))?;
+
+        if items.is_empty() {
+            return Err(AppError("Playlist is empty".to_string()).into());
+        }
+
+        // Create a list of audio files with their paths
+        let mut audio_files = items
+            .into_iter()
+            .map(|item| {
+                let filepath = format!("{}/{}_{}", item.user_folder, item.audio_id, item.filename);
+                (filepath, item.mime_type)
+            })
+            .collect::<Vec<_>>();
+
+        // Shuffle the playlist if requested
+        if options.shuffle {
+            let mut rng = thread_rng();
+            audio_files.shuffle(&mut rng);
+        }
+
+        // Create a playlist file with audio file paths
+        let mut playlist_file = NamedTempFile::new()?;
+        for (filepath, _) in &audio_files {
+            writeln!(playlist_file, "{}", filepath)?;
+        }
+
+        // Create a response with the playlist file
+        let mut response = HttpResponse::Ok();
+
+        // Set appropriate headers
+        response.append_header((header::CONTENT_TYPE, "audio/mpegurl"));
+        response.append_header((
+            header::CONTENT_DISPOSITION,
+            format!("attachment; filename=\"playlist-{}.m3u\"", playlist_id),
+        ));
+
+        // Return the playlist file
+        Ok(response.body(std::fs::read_to_string(playlist_file.path())?))
     } else {
         Err(AppError("Playlist not found".to_string()).into())
     }

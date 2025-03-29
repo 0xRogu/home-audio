@@ -55,6 +55,7 @@ The server will start on `http://127.0.0.1:8080` by default.
 - `DELETE /playlists/{id}` - Delete a playlist
 - `POST /playlists/{id}/items` - Add an audio file to a playlist
 - `DELETE /playlists/{id}/items/{item_id}` - Remove an audio file from a playlist
+- `GET /playlists/{id}/stream` - Stream a playlist (supports sequential or shuffled playback)
 
 ### User Management
 - `POST /users` - Create a new user

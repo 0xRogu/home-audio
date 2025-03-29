@@ -64,6 +64,7 @@ async fn main() -> std::io::Result<()> {
                 "/playlists/{id}/items/{item_id}",
                 web::delete().to(remove_from_playlist),
             )
+            .route("/playlists/{id}/stream", web::get().to(stream_playlist))
             .route("/users", web::post().to(create_user))
             .route("/users", web::get().to(list_users))
             .route("/users/{id}", web::delete().to(delete_user));

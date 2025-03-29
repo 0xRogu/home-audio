@@ -95,3 +95,8 @@ pub struct UserResponse {
     pub username: String,
     pub is_admin: bool,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StreamPlaylistOptions {
+    pub shuffle: bool,
+}

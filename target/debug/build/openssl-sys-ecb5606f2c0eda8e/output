@@ -54,7 +54,7 @@ OPENSSL_INCLUDE_DIR unset
 cargo:rerun-if-env-changed=AARCH64_APPLE_DARWIN_OPENSSL_DIR
 AARCH64_APPLE_DARWIN_OPENSSL_DIR unset
 cargo:rerun-if-env-changed=OPENSSL_DIR
-OPENSSL_DIR = /opt/homebrew/opt/openssl@3
+OPENSSL_DIR unset
 cargo:rerun-if-changed=/opt/homebrew/opt/openssl@3/include/openssl
 cargo:rustc-link-search=native=/opt/homebrew/opt/openssl@3/lib
 cargo:include=/opt/homebrew/opt/openssl@3/include

@@ -1,1 +1,0 @@
-cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/Users/brandon/Desktop/home-audio/target/debug/build/mime_guess-831ac690e84140be/out/mime_types_generated.rs

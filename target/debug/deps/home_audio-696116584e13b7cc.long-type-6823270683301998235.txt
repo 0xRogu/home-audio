@@ -1,1 +1,0 @@
-impl std::iter::Iterator<Item = std::result::Result<rustls::pki_types::PrivatePkcs8KeyDer<'static>, std::io::Error>> + '_
